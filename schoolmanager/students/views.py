@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.views import View
 from django.shortcuts import get_object_or_404
 from .models import Student
+from courses.models import Courses
 import json
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -35,8 +36,13 @@ class StudentCreateView(View):
             errors['email'] = "Este email já está cadastrado."
         if 'date_of_birth' not in data or not data['date_of_birth']:
             errors['date_of_birth'] = "Este campo é obrigatório."
-        if 'courses' not in data:
+        if 'courses' not in data or not isinstance(data['courses'], list):
             errors['courses'] = "Este campo é obrigatório."
+        else:
+            invalid_courses = []
+            for course_id in data['courses']:
+                if not Courses.objects.filter(id=course_id).exists():
+                    invalid_courses.append(course_id)
 
         if errors:
             return JsonResponse(errors, status=400)
